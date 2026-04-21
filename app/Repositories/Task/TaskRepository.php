@@ -15,9 +15,20 @@ class TaskRepository implements TaskRepositoryInterface
     public function create(array $data){
         return Task::create($data);
     }
-    public function findByIdOrFail(int $id){}
-    public function updateById(int $id, array $data){}
-    public function deleteById(int $id){}
+    public function findByIdOrFail(int $id){
+        return Task::query()->where('id', $id)->findOrFail($id);
+    }
+    public function updateById(int $id, array $data)
+    {
+        $task = Task::query()->where('id', $id)->where('user_id', $data['user_id'])->firstOrFail();
+        $task->update($data);
+        return $task;
+    }
+    public function deleteById(int $id, int $user_id){
+        $task = Task::query()->where('id', $id)->where('user_id', $user_id)->firstOrFail();
+        $task->delete();
+        return $task;
+    }
     public function countByUserId(int $user_id){
         return Task::query()->where('user_id','=',$user_id)->count();
     }

@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\CreateTaskRequest;
 use App\DTOs\Task\CreateTaskDTO;
 use App\Http\Resources\Task\TaskResource;
+use App\Http\Requests\Task\UpdateTaskRequest;
+use App\DTOs\Task\UpdateTaskDTO;
 class TaskController extends Controller
 {
     /**
@@ -39,15 +41,18 @@ class TaskController extends Controller
      */
     public function show(string $id)
     {
-        // lay task chi tiet voi get method
+        $task = $this->taskQueryService->findByIdOrFail($id);
+        return new TaskResource($task->load('user'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateTaskRequest $request, string $id)
     {
-        // cap nhat task voi patch method
+        $dto = UpdateTaskDTO::fromArray($request->validated());
+        $task = $this->taskCommandService->update($dto, $id, auth()->user()->id);
+        return new TaskResource($task->load('user'));
     }
 
     /**
@@ -55,6 +60,11 @@ class TaskController extends Controller
      */
     public function destroy(string $id)
     {
-        // xoa task voi delete method
+        $this->taskCommandService->delete($id, auth()->user()->id);
+        return response()->json([
+            'success' => true,
+            'message' => 'Task deleted successfully',
+        ], 200);
+
     }
 }

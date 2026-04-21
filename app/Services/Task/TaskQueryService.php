@@ -17,4 +17,8 @@ class TaskQueryService
         return $this->taskRepository->paginate(10);
          
     }
+    public function findByIdOrFail(int $id)
+    {
+        return $this->taskRepository->findByIdOrFail($id);
+    }
 }

@@ -8,6 +8,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ApiException extends Exception
 {
@@ -52,7 +53,7 @@ class ApiException extends Exception
             $errorCode = 'DATABASE_ERROR';
             $message = 'Database error';
         }
-        elseif($e instanceof ModelNotFoundException){
+        elseif($e instanceof ModelNotFoundException || $e instanceof NotFoundHttpException){
             $status = 404;
             $errorCode = 'RESOURCE_NOT_FOUND';
             $message = 'Resource not found';
@@ -61,7 +62,7 @@ class ApiException extends Exception
             'status' => $status,
             'error' =>[
                 'code' => $errorCode,
-                'message' => app()->isProduction() ? 'Something went wrong' : $e->getMessage(),
+                'message' => app()->isProduction() ? $message : $e->getMessage(),
                 'details' => app()->isProduction() ? null : $details,
             ],
         ];

@@ -9,6 +9,7 @@ use App\Exceptions\UnauthorizedException;
 use App\Models\Task\Task;
 use App\Exceptions\ApiException;
 use Illuminate\Support\Facades\DB;
+use App\DTOs\Task\UpdateTaskDTO;
 class TaskCommandService
 {
     /**
@@ -28,9 +29,13 @@ class TaskCommandService
             $task = $this->taskRepository->create($dto->toArray());
             DB::commit();
             return $task;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            throw new ApiException($e->getMessage(),$e->getErrorCode(), $e->getStatusCode());
+            throw new ApiException(
+                $e->getMessage(),
+                $e->getErrorCode(),
+                $e->getStatusCode()
+            );
         }
     }
     private function ensureTaskLimit(int $user_id): void
@@ -44,5 +49,30 @@ class TaskCommandService
         if($this->taskRepository->existsByTitleAndUserId($title,$user_id)){
             throw new ApiException('Task with this title already exists','TASK_TITLE_ALREADY_EXISTS', 409);
         }
+    }
+    public function update(UpdateTaskDTO $dto, int $id, int $user_id): Task
+    {
+        DB::beginTransaction();
+        try{
+            $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
+            $dto->setUserId($user_id);
+            $task = $this->taskRepository->updateById($id, $dto->toArray());
+            DB::commit();
+            return $task;
+
+        }catch(\Throwable $e){
+            DB::rollBack();
+            throw new ApiException(
+                $e->getMessage(),
+                $e->getErrorCode(),
+                $e->getStatusCode()
+            );
+        }
+        
+    }
+
+    public function delete(int $id, int $user_id): void
+    {
+        $this->taskRepository->deleteById($id, $user_id);
     }
 }

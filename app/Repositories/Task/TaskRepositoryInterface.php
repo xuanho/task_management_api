@@ -7,5 +7,5 @@ interface TaskRepositoryInterface
     public function create(array $data);
     public function findByIdOrFail(int $id);
     public function updateById(int $id, array $data);
-    public function deleteById(int $id);
+    public function deleteById(int $id, int $user_id);
 }
