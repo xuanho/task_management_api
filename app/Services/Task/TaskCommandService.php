@@ -10,12 +10,19 @@ use App\Models\Task\Task;
 use App\Exceptions\ApiException;
 use Illuminate\Support\Facades\DB;
 use App\DTOs\Task\UpdateTaskDTO;
+use App\Interfaces\TaskQueueInterface;
+use App\DTOs\Task\TaskMailDTO;
+use App\Interfaces\Mail\MailServiceInterface;
+use App\Services\Queue\TaskQueue;
+
 class TaskCommandService
 {
     /**
      * Create a new class instance.
      */
-    public function __construct(private TaskRepository $taskRepository)
+    public function __construct(private TaskRepository $taskRepository,
+                                private TaskQueueInterface $queue, 
+                                private MailServiceInterface $mailService )
     {
         //
     }
@@ -27,15 +34,13 @@ class TaskCommandService
             $this->ensureTaskTitleUnique($dto->getTitle(),$user_id);
             $dto->setUserId($user_id);
             $task = $this->taskRepository->create($dto->toArray());
+            //async email
+            $this->queue->sendTaskCreatedEmail($task->id);
             DB::commit();
             return $task;
         } catch (\Throwable $e) {
             DB::rollBack();
-            throw new ApiException(
-                $e->getMessage(),
-                $e->getErrorCode(),
-                $e->getStatusCode()
-            );
+            throw $e;
         }
     }
     private function ensureTaskLimit(int $user_id): void
@@ -74,5 +79,12 @@ class TaskCommandService
     public function delete(int $id, int $user_id): void
     {
         $this->taskRepository->deleteById($id, $user_id);
+    }
+
+    public function handleSendEmail(int $taskId) : void {
+        $task = $this->taskRepository->findWithUser($taskId);
+        // business logic
+        $mailDTO = new TaskMailDTO($task->title, $task->description, $task->user->name);
+        $this->mailService->sendTaskCreated($task->user->email, $mailDTO);      
     }
 }

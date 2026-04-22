@@ -33,7 +33,7 @@ class ApiException extends Exception
         $errorCode = 'SERVER_ERROR';
         $message = 'Something went wrong';
         $details = null;
-        if($e instanceof self){
+        if($e instanceof ApiException){
             $status = $e->getStatusCode();
             $errorCode = $e->getErrorCode();
             $message = $e->getMessage();

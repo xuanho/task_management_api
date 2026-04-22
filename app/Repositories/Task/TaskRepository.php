@@ -35,4 +35,7 @@ class TaskRepository implements TaskRepositoryInterface
     public function existsByTitleAndUserId(string $title, int $user_id){
         return Task::query()->where('title','=',$title)->where('user_id','=',$user_id)->exists();
     }
+    public function findWithUser($id){
+        return Task::with('user')->findOrFail($id);
+    }
 }
