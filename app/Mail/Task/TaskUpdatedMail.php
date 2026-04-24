@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Mail;
+namespace App\Mail\Task;
 
+use App\DTOs\Task\TaskMailDTO;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -9,16 +10,15 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\DTOs\Task\TaskMailDTO;
 
-class TaskCreatedMail extends Mailable
+class TaskUpdatedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(public TaskMailDTO $mailDTO )
+    public function __construct(public TaskMailDTO $mailDTO)
     {
         //
     }
@@ -29,7 +29,7 @@ class TaskCreatedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Task Created Mail',
+            subject: 'Task Updated Mail',
         );
     }
 
@@ -39,11 +39,12 @@ class TaskCreatedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.task_created',
+            view: 'emails.task_updated',
             with: [
                 'title' => $this->mailDTO->title,
                 'description' => $this->mailDTO->description,
-                'name' => $this->mailDTO->name
+                'name' => $this->mailDTO->name,
+                'status' => $this->mailDTO->status
             ]
         );
     }

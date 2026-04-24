@@ -59,19 +59,18 @@ class TaskCommandService
     {
         DB::beginTransaction();
         try{
-            $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
+            $task = $this->taskRepository->findByIdOrFail($id);
+            $this->validateUpdate($dto, $task, $user_id);
             $dto->setUserId($user_id);
-            $task = $this->taskRepository->updateById($id, $dto->toArray());
+            $updatedTask = $this->taskRepository->updateById($id, $dto->toArray());
+            // async email 
+            $this->queue->sendTaskUpdatedEmail($updatedTask->id);
             DB::commit();
-            return $task;
+            return $updatedTask;
 
         }catch(\Throwable $e){
             DB::rollBack();
-            throw new ApiException(
-                $e->getMessage(),
-                $e->getErrorCode(),
-                $e->getStatusCode()
-            );
+            throw $e;
         }
         
     }
@@ -81,10 +80,21 @@ class TaskCommandService
         $this->taskRepository->deleteById($id, $user_id);
     }
 
-    public function handleSendEmail(int $taskId) : void {
+    public function handleSendEmail(int $taskId, string $type) : void {
         $task = $this->taskRepository->findWithUser($taskId);
         // business logic
-        $mailDTO = new TaskMailDTO($task->title, $task->description, $task->user->name);
-        $this->mailService->sendTaskCreated($task->user->email, $mailDTO);      
+        $mailDTO = new TaskMailDTO($task->title, $task->description, $task->user->name, $task->status?->name);
+        if($type == 'created'){
+            $this->mailService->sendTaskCreated($task->user->email, $mailDTO);      
+        }elseif($type == 'updated'){
+            $this->mailService->sendTaskUpdated($task->user->email, $mailDTO);
+
+        }
+    }
+    public function validateUpdate(UpdateTaskDTO $dto, Task $task, int $user_id): void{
+        if($dto->getTitle() !== $task->title){
+            $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
+        }
+
     }
 }

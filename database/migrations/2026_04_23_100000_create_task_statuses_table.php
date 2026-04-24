@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create('task_statuses', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->text('description');
-            $table->integer('status');
-            $table->foreignId('user_id')->constrained('users');
+            $table->string('code', 50)->unique();
+            $table->string('name', 100);
+            $table->string('color', 20)->nullable();
+            $table->integer('order')->default(0);
+            $table->index('order'); // optimize sort UI
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('task_statuses');
     }
 };

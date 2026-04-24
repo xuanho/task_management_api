@@ -25,7 +25,7 @@ class UpdateTaskRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'status' => 'required|integer|in:0,1,2',
+            'status_id' => 'required|integer|in:1,2,3,4',
         ];
     }
 }

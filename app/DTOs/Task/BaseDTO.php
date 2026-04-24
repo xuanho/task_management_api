@@ -4,11 +4,11 @@ namespace App\DTOs\Task;
 
 abstract class BaseDTO
 {
-    public function __construct( ?string $title = null, public ?string $description = null, public ?int $status = null, public ?int $user_id = null)
+    public function __construct( ?string $title = null, public ?string $description = null, public ?int $status_id = null, public ?int $user_id = null)
     {
         $this->title = $title;
         $this->description = $description;
-        $this->status = $status;
+        $this->status_id = $status_id;
         $this->user_id = $user_id;
     }
     public function toArray(): array
@@ -16,7 +16,7 @@ abstract class BaseDTO
         return array_filter([
             'title' => $this->title,
             'description' => $this->description,
-            'status' => $this->status,
+            'status_id' => $this->status_id,
             'user_id' => $this->user_id,
         ], fn($value) => !is_null($value));
     }
@@ -30,7 +30,7 @@ abstract class BaseDTO
     }
     public function getStatus(): ?int
     {
-        return $this->status;
+        return $this->status_id;
     }
     public function getUserId(): ?int
     {

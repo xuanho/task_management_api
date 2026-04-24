@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Task\Email;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -30,7 +30,7 @@ class SendTaskCreatedEmailJob implements ShouldQueue
      */
     public function handle(TaskCommandService $taskCommandService): void
     {
-        $taskCommandService->handleSendEmail($this->taskId);
+        $taskCommandService->handleSendEmail($this->taskId, 'created');
     }
 
     public function failed(Throwable $e) : void {

@@ -8,12 +8,12 @@ class UpdateTaskDTO extends BaseDTO
     /**
      * Create a new class instance.
      */
-    public function __construct(?string $title = null, ?string $description = null, ?int $status = null )
+    public function __construct(?string $title = null, ?string $description = null, ?int $status_id = null )
     {
-        parent::__construct($title, $description, $status);
+        parent::__construct($title, $description, $status_id);
     }
     public static function fromArray(array $data): self
     {
-        return new self($data['title'] ?? null, $data['description'] ?? null, $data['status'] ?? null);
+        return new self($data['title'] ?? null, $data['description'] ?? null, $data['status_id'] ?? null);
     }
 }
