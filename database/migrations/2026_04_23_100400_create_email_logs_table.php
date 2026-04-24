@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('email_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('task_id')->nullable()->constrained('tasks')->nullOnDelete();
-            $table->string('type',50);
+            $table->string('type', 50);
             $table->string('recipient_email');
             $table->string('subject');
             $table->string('body')->nullable();
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('error_message')->nullable();
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();
-            $table->index(['task_id','type']);
+            $table->index(['task_id', 'type']);
             $table->index('status');
         });
     }

@@ -2,16 +2,17 @@
 
 namespace App\Repositories\Auth;
 
-use App\Models\User;
-use App\Repositories\Auth\AuthRepositoryInterface;
 use App\DTOs\Auth\RegisterDTO;
+use App\Models\User;
+
 class AuthRepository implements AuthRepositoryInterface
 {
     public function findByEmailOrFail(string $email): User
     {
         return User::where('email', $email)->firstOrFail();
     }
-    public function findByEmail(string $email): User|null
+
+    public function findByEmail(string $email): ?User
     {
         return User::where('email', $email)->first();
     }

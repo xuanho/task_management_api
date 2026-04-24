@@ -2,7 +2,6 @@
 
 namespace App\DTOs\Task;
 
-use App\DTOs\Task\BaseDTO;
 class CreateTaskDTO extends BaseDTO
 {
     /**
@@ -17,6 +16,4 @@ class CreateTaskDTO extends BaseDTO
     {
         return new self($data['title'], $data['description'], $data['status_id']);
     }
-   
-
 }

@@ -2,9 +2,10 @@
 
 namespace App\Http\Resources\Task;
 
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\UserResource;
+
 class TaskResource extends JsonResource
 {
     /**
@@ -25,6 +26,7 @@ class TaskResource extends JsonResource
             'user' => new UserResource($this->whenLoaded('user')),
         ];
     }
+
     public function toResponse($request)
     {
         return response()->json([

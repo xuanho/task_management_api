@@ -4,19 +4,20 @@ namespace App\Jobs\Task\Email;
 
 use App\Services\Task\TaskCommandService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
 
 class SendTaskUpdatedEmailJob implements ShouldQueue
 {
-    use Queueable, Dispatchable;
+    use Dispatchable, Queueable;
+
     public int $tries = 3;
 
-    public function backoff():array{
-        return [10,30,60];
+    public function backoff(): array
+    {
+        return [10, 30, 60];
 
     }
-
 
     /**
      * Create a new job instance.
@@ -32,6 +33,6 @@ class SendTaskUpdatedEmailJob implements ShouldQueue
     public function handle(TaskCommandService $task): void
     {
         $task->handleSendEmail($this->taskId, 'updated');
-        
+
     }
 }

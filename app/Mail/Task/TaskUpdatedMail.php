@@ -4,7 +4,6 @@ namespace App\Mail\Task;
 
 use App\DTOs\Task\TaskMailDTO;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -44,7 +43,7 @@ class TaskUpdatedMail extends Mailable
                 'title' => $this->mailDTO->title,
                 'description' => $this->mailDTO->description,
                 'name' => $this->mailDTO->name,
-                'status' => $this->mailDTO->status
+                'status' => $this->mailDTO->status,
             ]
         );
     }
