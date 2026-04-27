@@ -2,7 +2,6 @@
 
 namespace App\Services\Email;
 
-use App\Enums\Email\EmailStatus;
 use App\Interfaces\Email\EmailLogReponsitoryInterface;
 use App\Models\Task\Email\EmailLog;
 

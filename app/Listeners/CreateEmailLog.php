@@ -8,7 +8,6 @@ use App\Events\TaskCreated;
 use App\Interfaces\TaskQueueInterface;
 use App\Models\Task\Task;
 use App\Services\Email\EmailLogService;
-use App\Services\Task\TaskQueryService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class CreateEmailLog implements ShouldQueue
@@ -27,7 +26,7 @@ class CreateEmailLog implements ShouldQueue
     public function handle(TaskCreated $event): void
     {
         $task = Task::with('user')->findOrFail($event->taskId);
-        
+
         $emailLog = $this->emailLogService->create([
             'task_id' => $task->id,
             'type' => EmailType::TASK_CREATED,
@@ -37,6 +36,6 @@ class CreateEmailLog implements ShouldQueue
         ]);
 
         $this->taskQueue->sendTaskCreatedEmail($task->id, $emailLog->id);
-        
+
     }
 }

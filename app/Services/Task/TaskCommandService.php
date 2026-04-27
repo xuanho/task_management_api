@@ -36,6 +36,7 @@ class TaskCommandService
             DB::commit();
             // event
             event(new TaskCreated($task->id));
+
             return $task;
         } catch (\Throwable $e) {
             DB::rollBack();

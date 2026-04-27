@@ -16,6 +16,7 @@ class SendTaskCreatedEmailJob implements ShouldQueue
     use Dispatchable, Queueable;
 
     public int $tries = 3;
+
     public ?int $emailLogId = null;
 
     public function backoff(): array
