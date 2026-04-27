@@ -8,9 +8,9 @@ use App\Jobs\Task\Email\SendTaskUpdatedEmailJob;
 
 class TaskQueue implements TaskQueueInterface
 {
-    public function sendTaskCreatedEmail(int $taskId): void
+    public function sendTaskCreatedEmail(int $taskId, int $emailLogId): void
     {
-        SendTaskCreatedEmailJob::dispatch($taskId);
+        SendTaskCreatedEmailJob::dispatch($taskId, $emailLogId);
 
     }
 

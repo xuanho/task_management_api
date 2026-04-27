@@ -5,6 +5,7 @@ namespace App\Services\Task;
 use App\DTOs\Task\CreateTaskDTO;
 use App\DTOs\Task\TaskMailDTO;
 use App\DTOs\Task\UpdateTaskDTO;
+use App\Events\TaskCreated;
 use App\Exceptions\ApiException;
 use App\Interfaces\Mail\MailServiceInterface;
 use App\Interfaces\TaskQueueInterface;
@@ -32,10 +33,9 @@ class TaskCommandService
             $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
             $dto->setUserId($user_id);
             $task = $this->taskRepository->create($dto->toArray());
-            // async email
-            $this->queue->sendTaskCreatedEmail($task->id);
             DB::commit();
-
+            // event
+            event(new TaskCreated($task->id));
             return $task;
         } catch (\Throwable $e) {
             DB::rollBack();
