@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('task_histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
+            $table->foreignId('task_id')->constrained('tasks');
             $table->foreignId('old_status_id')->nullable()->constrained('task_statuses');
             $table->foreignId('new_status_id')->constrained('task_statuses');
             $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();

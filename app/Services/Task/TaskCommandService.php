@@ -5,12 +5,15 @@ namespace App\Services\Task;
 use App\DTOs\Task\CreateTaskDTO;
 use App\DTOs\Task\TaskMailDTO;
 use App\DTOs\Task\UpdateTaskDTO;
+use App\DTOs\TaskHistory\CreateTaskHistoryDTO;
 use App\Events\TaskCreated;
+use App\Events\TaskUpdated;
 use App\Exceptions\ApiException;
 use App\Interfaces\Mail\MailServiceInterface;
 use App\Interfaces\TaskQueueInterface;
 use App\Models\Task\Task;
 use App\Repositories\Task\TaskRepositoryInterface;
+use App\Repositories\TaskHistory\TaskHistoryRepository;
 use Illuminate\Support\Facades\DB;
 
 class TaskCommandService
@@ -19,11 +22,8 @@ class TaskCommandService
      * Create a new class instance.
      */
     public function __construct(private TaskRepositoryInterface $taskRepository,
-        private TaskQueueInterface $queue,
-        private MailServiceInterface $mailService)
-    {
-        //
-    }
+        private MailServiceInterface $mailService,
+        private TaskHistoryRepository $taskHistoryRepository) {}
 
     public function create(CreateTaskDTO $dto, int $user_id): Task
     {
@@ -46,7 +46,7 @@ class TaskCommandService
 
     private function ensureTaskLimit(int $user_id): void
     {
-        if ($this->taskRepository->countByUserId($user_id) >= 10) {
+        if ($this->taskRepository->countByUserId($user_id) >= 100) {
             throw new ApiException('You have reached the maximum number of tasks', 'TASK_MAX_NUMBER_OF_TASKS_REACHED', 403);
         }
     }
@@ -66,9 +66,10 @@ class TaskCommandService
             $this->validateUpdate($dto, $task, $user_id);
             $dto->setUserId($user_id);
             $updatedTask = $this->taskRepository->updateById($id, $dto->toArray());
-            // async email
-            $this->queue->sendTaskUpdatedEmail($updatedTask->id);
+            $this->recordTaskHistory($task, $updatedTask, $task->user->id);
             DB::commit();
+            // event
+            event(new TaskUpdated($task->id));
 
             return $updatedTask;
 
@@ -102,6 +103,17 @@ class TaskCommandService
         if ($dto->getTitle() !== $task->title) {
             $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
         }
+
+    }
+
+    private function recordTaskHistory(Task $task, Task $updatedTask, int $userId): void
+    {
+        $historyDTO = new CreateTaskHistoryDTO(
+            taskId: $task->id,
+            oldStatusId: $task->status_id,
+            newStatusId: $updatedTask->status_id,
+            changedBy: $userId);
+        $this->taskHistoryRepository->logStatusChange($historyDTO);
 
     }
 }

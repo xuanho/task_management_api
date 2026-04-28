@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('email_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('task_id')->nullable()->constrained('tasks')->nullOnDelete();
+            $table->foreignId('task_id')->nullable()->constrained('tasks');
             $table->string('type', 50);
             $table->string('recipient_email');
             $table->string('subject');
-            $table->string('body')->nullable();
+            $table->longText('body')->nullable(); //HTML content
             $table->string('status')->default('pending');
             $table->text('error_message')->nullable();
             $table->timestamp('sent_at')->nullable();

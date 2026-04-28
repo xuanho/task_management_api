@@ -3,6 +3,7 @@
 namespace App\Jobs\Task\Email;
 
 use App\Enums\Email\EmailStatus;
+use App\Models\Task\Email\EmailLog;
 use App\Services\Email\EmailLogService;
 use App\Services\Task\TaskCommandService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,7 +22,7 @@ class SendTaskCreatedEmailJob implements ShouldQueue
 
     public function backoff(): array
     {
-        return [10, 30, 60];
+        return [10, 30, 60];  //delay 
     }
 
     /**
@@ -37,6 +38,14 @@ class SendTaskCreatedEmailJob implements ShouldQueue
      */
     public function handle(TaskCommandService $taskCommandService, EmailLogService $emailLogService): void
     {
+        
+        // idempotency check
+        if($this->emailLogId !== null){
+            $emailLog = EmailLog::find($this->emailLogId);
+            if($emailLog && $emailLog->status == EmailStatus::SENT){
+                return;
+            }
+        }
         $taskCommandService->handleSendEmail($this->taskId, 'created');
         if ($this->emailLogId !== null) {
             $emailLogService->updateStatus($this->emailLogId, ['status' => EmailStatus::SENT]);
