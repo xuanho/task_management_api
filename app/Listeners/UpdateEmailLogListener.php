@@ -9,7 +9,6 @@ use App\Events\TaskUpdated;
 use App\Interfaces\TaskQueueInterface;
 use App\Models\Task\Task;
 use App\Services\Email\EmailLogService;
-use Illuminate\Container\Attributes\Log;
 
 class UpdateEmailLogListener
 {
@@ -36,7 +35,7 @@ class UpdateEmailLogListener
             'subject' => 'Task updated',
             'body' => $body,
             'status' => EmailStatus::PENDING,
-            
+
         ]);
         $this->taskQueueInterface->sendTaskUpdatedEmail($task->id, $emailLog->id);
 

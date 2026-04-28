@@ -22,7 +22,7 @@ class SendTaskCreatedEmailJob implements ShouldQueue
 
     public function backoff(): array
     {
-        return [10, 30, 60];  //delay 
+        return [10, 30, 60];  // delay
     }
 
     /**
@@ -38,11 +38,11 @@ class SendTaskCreatedEmailJob implements ShouldQueue
      */
     public function handle(TaskCommandService $taskCommandService, EmailLogService $emailLogService): void
     {
-        
+
         // idempotency check
-        if($this->emailLogId !== null){
+        if ($this->emailLogId !== null) {
             $emailLog = EmailLog::find($this->emailLogId);
-            if($emailLog && $emailLog->status == EmailStatus::SENT){
+            if ($emailLog && $emailLog->status == EmailStatus::SENT) {
                 return;
             }
         }

@@ -36,10 +36,10 @@ class SendTaskUpdatedEmailJob implements ShouldQueue
      */
     public function handle(TaskCommandService $task, EmailLogService $emailLogService): void
     {
-         // idempotency check
-         if($this->emailLogId !== null){
+        // idempotency check
+        if ($this->emailLogId !== null) {
             $emailLog = EmailLog::find($this->emailLogId);
-            if($emailLog && $emailLog->status == EmailStatus::SENT){
+            if ($emailLog && $emailLog->status == EmailStatus::SENT) {
                 return;
             }
         }

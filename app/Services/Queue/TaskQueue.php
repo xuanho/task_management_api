@@ -3,7 +3,6 @@
 namespace App\Services\Queue;
 
 use App\Interfaces\TaskQueueInterface;
-use App\Jobs\HeavyJob;
 use App\Jobs\Task\Email\SendTaskCreatedEmailJob;
 use App\Jobs\Task\Email\SendTaskUpdatedEmailJob;
 

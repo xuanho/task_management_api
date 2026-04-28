@@ -10,7 +10,6 @@ use App\Events\TaskCreated;
 use App\Events\TaskUpdated;
 use App\Exceptions\ApiException;
 use App\Interfaces\Mail\MailServiceInterface;
-use App\Interfaces\TaskQueueInterface;
 use App\Models\Task\Task;
 use App\Repositories\Task\TaskRepositoryInterface;
 use App\Repositories\TaskHistory\TaskHistoryRepository;

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('type', 50);
             $table->string('recipient_email');
             $table->string('subject');
-            $table->longText('body')->nullable(); //HTML content
+            $table->longText('body')->nullable(); // HTML content
             $table->string('status')->default('pending');
             $table->text('error_message')->nullable();
             $table->timestamp('sent_at')->nullable();
