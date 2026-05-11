@@ -10,12 +10,12 @@ class TaskQueue implements TaskQueueInterface
 {
     public function sendTaskCreatedEmail(int $taskId, int $emailLogId): void
     {
-        SendTaskCreatedEmailJob::dispatch($taskId, $emailLogId)->onQueue('emails');
+        SendTaskCreatedEmailJob::dispatch($taskId, $emailLogId)->onQueue('emails')->afterCommit();
     }
 
     public function sendTaskUpdatedEmail(int $taskId, int $emailLogId): void
     {
-        SendTaskUpdatedEmailJob::dispatch($taskId, $emailLogId)->onQueue('emails');
+        SendTaskUpdatedEmailJob::dispatch($taskId, $emailLogId)->onQueue('emails')->afterCommit();
 
     }
 }

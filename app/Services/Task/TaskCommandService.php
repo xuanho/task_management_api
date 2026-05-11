@@ -26,26 +26,20 @@ class TaskCommandService
 
     public function create(CreateTaskDTO $dto, int $user_id): Task
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () use ($dto, $user_id) {
             $this->ensureTaskLimit($user_id);
             $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
             $dto->setUserId($user_id);
             $task = $this->taskRepository->create($dto->toArray());
-            DB::commit();
-            // event
             event(new TaskCreated($task->id));
 
             return $task;
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        });
     }
 
     private function ensureTaskLimit(int $user_id): void
     {
-        if ($this->taskRepository->countByUserId($user_id) >= 100) {
+        if ($this->taskRepository->countByUserId($user_id) >= 5) {
             throw new ApiException('You have reached the maximum number of tasks', 'TASK_MAX_NUMBER_OF_TASKS_REACHED', 403);
         }
     }
@@ -59,24 +53,17 @@ class TaskCommandService
 
     public function update(UpdateTaskDTO $dto, int $id, int $user_id): Task
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () use ($dto, $id, $user_id) {
             $task = $this->taskRepository->findByIdOrFail($id);
             $this->validateUpdate($dto, $task, $user_id);
             $dto->setUserId($user_id);
             $updatedTask = $this->taskRepository->updateById($id, $dto->toArray());
             $this->recordTaskHistory($task, $updatedTask, $task->user->id);
-            DB::commit();
             // event
             event(new TaskUpdated($task->id));
 
             return $updatedTask;
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
-        }
-
+        });
     }
 
     public function delete(int $id, int $user_id): void

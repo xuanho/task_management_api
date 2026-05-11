@@ -6,12 +6,14 @@ use App\Models\Task\Email\EmailLog;
 use App\Models\Task\TaskHistory\TaskHistory;
 use App\Models\TaskStatus;
 use App\Models\User;
+use Database\Factories\TaskFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -38,5 +40,11 @@ class Task extends Model
     public function taskHistories()
     {
         return $this->hasMany(TaskHistory::class, 'task_id');
+    }
+
+    protected static function newFactory()
+    {
+        return TaskFactory::new();
+
     }
 }
