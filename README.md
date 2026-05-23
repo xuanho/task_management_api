@@ -1,58 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🚀 Task Management API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Task Management API built with Laravel following a layered architecture (Controller → Service → Repository). It supports asynchronous processing via queues and records email logs when tasks are created or updated.
 
-## About Laravel
+## **Overview**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Purpose:** Demonstrate a backend API for managing tasks with lifecycle management, status history, email notifications on create/update, and background processing for heavy jobs.
+- **Requirements:** Laravel 13+, PHP 8.3+, Laravel Sanctum for authentication, Redis/Queue (Horizon) for background job handling.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## **Tech Stack**
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Language & framework:** PHP, Laravel
+- **Auth:** Laravel Sanctum
+- **Queue:** Laravel Queue + Horizon (Redis/Predis)
+- **DB:** MySQL (or SQLite for test/dev)
+- **Optional:** Node/npm for assets
 
-## Learning Laravel
+## **Key Features**
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **CRUD Tasks:** create, read, update, delete tasks
+- **Task lifecycle:** statuses managed by `TaskStatus` and changes recorded in `TaskHistory`
+- **Email logs:** create `EmailLog` entries on task creation/update and dispatch jobs to send emails
+- **Queue processing:** email sending is pushed to the `emails` queue using `SendTaskCreatedEmailJob` and `SendTaskUpdatedEmailJob`
+- **Business rules:** per-user task limit and unique-title validation
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## **Installation & Run**
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+1. Clone repository and open the project folder:
+    - git clone <repo>
+    - cd task_api
+2. Install PHP dependencies:
+    - composer install
+3. Copy environment file and generate app key:
+    - cp .env.example .env
+    - php artisan key:generate
+4. Configure the database in `.env` and run migrations:
+    - php artisan migrate
+5. (Optional) Install npm packages and build assets:
+    - npm install
+    - npm run build
+6. Start queue worker / Horizon:
+    - php artisan queue:work --queue=emails --tries=3
+    - Or run Horizon if configured: php artisan horizon
+7. Start the application server:
+    - php artisan serve
 
-## Agentic Development
+## **Important Environment Variables**
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+- `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`
+- Redis/Queue config for Horizon/Redis: `REDIS_HOST`, `REDIS_PASSWORD`, `REDIS_PORT`
 
-```bash
-composer require laravel/boost --dev
+## **API Endpoints (summary)**
 
-php artisan boost:install
-```
+- Base path: `/api/v1`
+- **Auth** (`/api/v1/auth`):
+    - `POST /login` — authenticate and return token
+    - `POST /register` — create a new user
+    - `POST /logout` — revoke token / logout
+- **Task** (`/api/v1/task`) — protected by Sanctum:
+    - `GET /` — list tasks (paginated)
+    - `POST /` — create a task
+    - `GET /{id}` — get task details
+    - `PATCH /{id}` — update task
+    - `DELETE /{id}` — delete task
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Use header `Authorization: Bearer <token>` (Sanctum)
 
-## Contributing
+## **Business Flows**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- On task creation: `TaskCommandService::create()` checks limits and uniqueness, creates the task and fires `TaskCreated` event.
+- Listener `CreateEmailLog` creates an `EmailLog` (status = pending) and dispatches a job using `TaskQueue::sendTaskCreatedEmail()`.
+- On task update: `TaskHistory` is recorded, `TaskUpdated` event is fired, an `EmailLog` is created and an email job is dispatched.
 
-## Code of Conduct
+## **Notable files / components**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- [app/Http/Controllers/Api/AuthController.php](app/Http/Controllers/Api/AuthController.php) — authentication
+- [app/Http/Controllers/Api/v1/Task/TaskController.php](app/Http/Controllers/Api/v1/Task/TaskController.php) — task endpoints
+- [app/Services/Task/TaskCommandService.php](app/Services/Task/TaskCommandService.php) — create/update/delete business logic
+- [app/Services/Task/TaskQueryService.php](app/Services/Task/TaskQueryService.php) — read/query logic
+- [app/Repositories/Task/TaskRepository.php](app/Repositories/Task/TaskRepository.php) — DB access for Task
+- [app/Events/TaskCreated.php](app/Events/TaskCreated.php), [app/Events/TaskUpdated.php](app/Events/TaskUpdated.php) — events
+- [app/Listeners/CreateEmailLog.php](app/Listeners/CreateEmailLog.php), [app/Listeners/UpdateEmailLogListener.php](app/Listeners/UpdateEmailLogListener.php) — listeners that create email logs and dispatch queue jobs
+- [app/Jobs/Task/Email/SendTaskCreatedEmailJob.php](app/Jobs/Task/Email/SendTaskCreatedEmailJob.php) — queued job to send email
+- [app/Infrastructure/MailService.php](app/Infrastructure/MailService.php) — mail wrapper using Mailables in `app/Mail`
 
-## Security Vulnerabilities
+## **Database & Factories**
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Migrations are in `database/migrations` (tasks, users, task_statuses, task_histories, email_logs, etc.)
+- Factories for test/seeding are in `database/factories`
 
-## License
+## **Testing**
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Run tests: `composer test` or `php artisan test`.
+- The repository contains `tests/` with unit tests for listeners and services.
+
+## **Operational Tips**
+
+- Use Horizon to monitor queues and retry policies (configured in `config/horizon.php`).
+- Ensure a worker is running for the `emails` queue to process email sending jobs.
