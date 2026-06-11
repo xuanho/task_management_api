@@ -135,7 +135,7 @@ class CreateTaskApiTest extends TestCase
                     'code' => 'VALIDATION_ERROR',
                     'message' => 'The selected status id is invalid.',
                     'details' => [
-                        'status_id' => ['The selected status id is invalid.']
+                        'status_id' => ['The selected status id is invalid.'],
                     ],
                 ],
             ]);

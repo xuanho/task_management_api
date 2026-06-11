@@ -35,6 +35,7 @@ class TaskCommandService
                 $dto->setUserId($user_id);
                 $task = $this->taskRepository->create($dto->toArray());
                 event(new TaskCreated($task->id));
+
                 return $task;
             });
         } catch (QueryException $e) {
@@ -43,7 +44,7 @@ class TaskCommandService
             }
             throw $e;
         }
-        
+
     }
 
     private function ensureTaskLimit(int $user_id): void
@@ -111,6 +112,4 @@ class TaskCommandService
         $this->taskHistoryRepository->logStatusChange($historyDTO);
 
     }
-
-    
 }
