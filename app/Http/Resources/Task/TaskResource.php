@@ -32,6 +32,6 @@ class TaskResource extends JsonResource
         return response()->json([
             'success' => true,
             'data' => $this->toArray($request),
-        ], 200);
+        ], 201);
     }
 }

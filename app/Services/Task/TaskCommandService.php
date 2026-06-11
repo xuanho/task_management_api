@@ -13,6 +13,7 @@ use App\Interfaces\Mail\MailServiceInterface;
 use App\Models\Task\Task;
 use App\Repositories\Task\TaskRepositoryInterface;
 use App\Repositories\TaskHistory\TaskHistoryRepository;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 class TaskCommandService
@@ -26,15 +27,23 @@ class TaskCommandService
 
     public function create(CreateTaskDTO $dto, int $user_id): Task
     {
-        return DB::transaction(function () use ($dto, $user_id) {
-            $this->ensureTaskLimit($user_id);
-            $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
-            $dto->setUserId($user_id);
-            $task = $this->taskRepository->create($dto->toArray());
-            event(new TaskCreated($task->id));
+        try {
 
-            return $task;
-        });
+            return DB::transaction(function () use ($dto, $user_id) {
+                $this->ensureTaskLimit($user_id);
+                $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
+                $dto->setUserId($user_id);
+                $task = $this->taskRepository->create($dto->toArray());
+                event(new TaskCreated($task->id));
+                return $task;
+            });
+        } catch (QueryException $e) {
+            if (DatabaseErrorDetector::isUniqueViolation($e)) {
+                throw new ApiException('Task with this title already exists', 'TASK_TITLE_ALREADY_EXISTS', 422);
+            }
+            throw $e;
+        }
+        
     }
 
     private function ensureTaskLimit(int $user_id): void
@@ -47,7 +56,7 @@ class TaskCommandService
     private function ensureTaskTitleUnique(string $title, int $user_id): void
     {
         if ($this->taskRepository->existsByTitleAndUserId($title, $user_id)) {
-            throw new ApiException('Task with this title already exists', 'TASK_TITLE_ALREADY_EXISTS', 409);
+            throw new ApiException('Task with this title already exists', 'TASK_TITLE_ALREADY_EXISTS', 422);
         }
     }
 
@@ -102,4 +111,6 @@ class TaskCommandService
         $this->taskHistoryRepository->logStatusChange($historyDTO);
 
     }
+
+    
 }
