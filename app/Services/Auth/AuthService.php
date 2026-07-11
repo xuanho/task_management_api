@@ -10,8 +10,9 @@ use App\Exceptions\UnauthorizedException;
 use App\Http\Resources\UserResource;
 use App\Interfaces\Auth\TokenServiceInterface;
 use App\Repositories\Auth\AuthRepository;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+
 class AuthService
 {
     public function __construct(private AuthRepository $authRepository, private TokenServiceInterface $tokenService) {}
@@ -25,7 +26,7 @@ class AuthService
         $token = $this->tokenService->generateToken($user);
 
         return new AuthResponseDTO($token, 'Bearer', new UserResource($user));
-        
+
     }
 
     public function register(RegisterDTO $registerDTO)
@@ -46,6 +47,7 @@ class AuthService
     public function logout()
     {
         $this->tokenService->invalidateToken();
+
         return json_encode(['message' => 'Successfully logged out']);
     }
 }
