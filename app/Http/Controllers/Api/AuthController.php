@@ -9,7 +9,6 @@ use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -29,9 +28,10 @@ class AuthController extends Controller
         return response()->json($this->authService->register($dto), 201);
     }
 
-    public function logout(Request $request)
+    public function logout(): JsonResponse
     {
-        // xóa token từ request
-        // trả về response
+        $this->authService->logout();
+
+        return response()->json(['message' => 'Successfully logged out']);
     }
 }

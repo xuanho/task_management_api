@@ -28,5 +28,3 @@ class TaskStatus extends Model
         return TaskStatusFactory::new();
     }
 }
-
-// mai lam tiep php unit test cho model TaskStatus
