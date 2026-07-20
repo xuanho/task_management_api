@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\v1\Task\TaskController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('task')->middleware('auth:api')->group(function () {
+Route::prefix('task')->middleware('auth:api', 'check.access')->group(function () {
     Route::get('/', [TaskController::class, 'index']);
     Route::post('/', [TaskController::class, 'store']);
     Route::get('/{id}', [TaskController::class, 'show']);

@@ -9,6 +9,7 @@ use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -26,6 +27,12 @@ class AuthController extends Controller
         $dto = RegisterDTO::fromArray($request->validated());
 
         return response()->json($this->authService->register($dto), 201);
+    }
+
+    public function refresh(Request $request)
+    {
+        return response()->json($this->authService->refresh($request->refresh_token));
+
     }
 
     public function logout(): JsonResponse

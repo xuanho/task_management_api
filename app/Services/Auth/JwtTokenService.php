@@ -7,9 +7,9 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class JwtTokenService implements TokenServiceInterface
 {
-    public function generateToken($user): string
+    public function generateAccessToken($user): string
     {
-        return JWTAuth::fromUser($user);
+        return JWTAuth::claims(['type' => 'access'])->fromUser($user);
     }
 
     public function invalidateToken(): void

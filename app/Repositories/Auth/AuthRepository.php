@@ -21,4 +21,9 @@ class AuthRepository implements AuthRepositoryInterface
     {
         return User::create($registerDTO->toArray());
     }
+
+    public function findById(int $id): ?User
+    {
+        return User::find($id);
+    }
 }

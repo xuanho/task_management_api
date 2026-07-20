@@ -6,7 +6,7 @@ use App\Interfaces\Auth\TokenServiceInterface;
 
 class SanctumTokenService implements TokenServiceInterface
 {
-    public function generateToken($user): string
+    public function generateAccessToken($user): string
     {
         return $user->createToken('auth_token')->plainTextToken;
     }

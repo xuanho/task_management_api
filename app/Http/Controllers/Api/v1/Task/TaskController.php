@@ -33,7 +33,8 @@ class TaskController extends Controller
         $dto = CreateTaskDTO::fromArray($request->validated());
         $task = $this->taskCommandService->create($dto, auth()->user()->id);
 
-        return new TaskResource($task->load('user'));
+        return new TaskResource($task->load('user'))->response()
+            ->setStatusCode(201);
     }
 
     /**
