@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Resources\Task;
+namespace App\Http\Resources\Project;
 
-use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TaskResource extends JsonResource
+class ProjectResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -17,19 +16,14 @@ class TaskResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'title' => $this->title,
-            'description' => $this->description,
-            'status_id' => $this->status_id,
-            'user_id' => $this->user_id,
-            'project_id' => $this->project_id,
-            'assigned_to' => $this->assigned_to,
+            'name' => $this->name,
+            'owner_id' => $this->owner_id,
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
-            'user' => new UserResource($this->whenLoaded('user')),
         ];
     }
 
-    public function toResponse($request)
+    public function response($request = null)
     {
         return response()->json([
             'success' => true,

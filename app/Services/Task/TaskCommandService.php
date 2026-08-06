@@ -9,6 +9,7 @@ use App\DTOs\TaskHistory\CreateTaskHistoryDTO;
 use App\Events\TaskCreated;
 use App\Events\TaskUpdated;
 use App\Exceptions\ApiException;
+use App\Interfaces\Auth\PermissionServiceInterface;
 use App\Interfaces\Mail\MailServiceInterface;
 use App\Models\Task\Task;
 use App\Repositories\Task\TaskRepositoryInterface;
@@ -23,12 +24,16 @@ class TaskCommandService
      */
     public function __construct(private TaskRepositoryInterface $taskRepository,
         private MailServiceInterface $mailService,
-        private TaskHistoryRepository $taskHistoryRepository) {}
+        private TaskHistoryRepository $taskHistoryRepository,
+        private PermissionServiceInterface $permissionService) {}
 
     public function create(CreateTaskDTO $dto, int $user_id): Task
     {
-        try {
+        if (! $this->permissionService->canCreateTask($user_id, $dto->getProjectId())) {
+            throw new ApiException('Forbidden', 'FORBIDDEN', 403);
+        }
 
+        try {
             return DB::transaction(function () use ($dto, $user_id) {
                 $this->ensureTaskLimit($user_id);
                 $this->ensureTaskTitleUnique($dto->getTitle(), $user_id);
@@ -63,8 +68,12 @@ class TaskCommandService
 
     public function update(UpdateTaskDTO $dto, int $id, int $user_id): Task
     {
-        return DB::transaction(function () use ($dto, $id, $user_id) {
-            $task = $this->taskRepository->findByIdOrFail($id);
+        $task = $this->taskRepository->findByIdOrFail($id);
+        if (! $this->permissionService->canUpdateTask($user_id, $task)) {
+            throw new ApiException('Forbidden', 'FORBIDDEN', 403);
+        }
+
+        return DB::transaction(function () use ($dto, $id, $user_id, $task) {
             $this->validateUpdate($dto, $task, $user_id);
             $dto->setUserId($user_id);
             $updatedTask = $this->taskRepository->updateById($id, $dto->toArray());
@@ -78,6 +87,10 @@ class TaskCommandService
 
     public function delete(int $id, int $user_id): void
     {
+        $task = $this->taskRepository->findByIdOrFail($id);
+        if (! $this->permissionService->canDeleteTask($user_id, $task)) {
+            throw new ApiException('Forbidden', 'FORBIDDEN', 403);
+        }
         $this->taskRepository->deleteById($id, $user_id);
     }
 
