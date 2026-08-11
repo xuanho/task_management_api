@@ -2,13 +2,20 @@
 
 namespace Tests\Feature\Feature;
 
+use App\Enums\Auth\PermissionEnum;
 use App\Events\TaskCreated;
+use App\Models\Auth\Permission;
+use App\Models\Auth\Role;
+use App\Models\Auth\RolePermission;
+use App\Models\Project\Project;
+use App\Models\Project\ProjectMember;
 use App\Models\Task\Task;
 use App\Models\TaskStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CreateTaskApiTest extends TestCase
 {
@@ -17,18 +24,38 @@ class CreateTaskApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->user = User::factory()->create();
+        $this->project = Project::factory()->create();
+        $role = Role::factory()->admin()->create();
+        $permission = Permission::query()->create([
+            'name' => PermissionEnum::TASK_CREATE->value,
+            'description' => 'Create task permission',
+        ]);
+        RolePermission::query()->create([
+            'role_id' => $role->id,
+            'permission_id' => $permission->id,
+        ]);
+        ProjectMember::factory()->for($this->user)->for($this->project)->for($role)->create();
         Event::fake();
+
+    }
+
+    protected function asAuthenticatedApiUser(User $user): self
+    {
+        $token = JWTAuth::claims(['type' => 'access'])->fromUser($user);
+
+        return $this->actingAs($user, 'api')->withHeader('Authorization', 'Bearer '.$token);
     }
 
     public function test_create_task_api_success(): void
     {
-        $user = User::factory()->create();
         $status = TaskStatus::factory()->create();
-        $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/task', [
+        $response = $this->asAuthenticatedApiUser($this->user)->postJson('/api/v1/task', [
             'title' => 'Test Task',
             'description' => 'Test Description',
             'status_id' => $status->id,
-
+            'project_id' => $this->project->id,
+            'assigned_to' => $this->user->id,
         ]);
         $response->assertStatus(201)
             ->assertJsonStructure([
@@ -47,19 +74,19 @@ class CreateTaskApiTest extends TestCase
             'title' => 'Test Task',
             'description' => 'Test Description',
             'status_id' => $status->id,
-            'user_id' => $user->id,
+            'user_id' => $this->user->id,
         ]);
         Event::assertDispatched(TaskCreated::class);
     }
 
     public function test_event_not_dispatched_when_task_creation_fails(): void
     {
-        $user = User::factory()->create();
         Task::factory()->create([
             'title' => 'Test Task',
-            'user_id' => $user->id,
+            'user_id' => $this->user->id,
         ]);
-        $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/task', [
+
+        $response = $this->asAuthenticatedApiUser($this->user)->postJson('/api/v1/task', [
             'title' => 'Test Task',
             'description' => 'Test Description',
             'status_id' => 1,
@@ -80,10 +107,12 @@ class CreateTaskApiTest extends TestCase
 
     public function test_validation_fail_due_to_missing_title(): void
     {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/task', [
+
+        $response = $this->asAuthenticatedApiUser($this->user)->postJson('/api/v1/task', [
             'description' => 'Test Description',
             'status_id' => 1,
+            'project_id' => $this->project->id,
+            'assigned_to' => $this->user->id,
         ]);
         $response->assertStatus(422)
             ->assertJson([
@@ -100,15 +129,18 @@ class CreateTaskApiTest extends TestCase
 
     public function test_validation_fail_due_to_duplicate_title(): void
     {
-        $user = User::factory()->create();
         Task::factory()->create([
             'title' => 'Test Task',
-            'user_id' => $user->id,
+            'user_id' => $this->user->id,
+            'project_id' => $this->project->id,
+            'assigned_to' => $this->user->id,
         ]);
-        $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/task', [
+        $response = $this->asAuthenticatedApiUser($this->user)->postJson('/api/v1/task', [
             'title' => 'Test Task',
             'description' => 'Test Description',
             'status_id' => 1,
+            'project_id' => $this->project->id,
+            'assigned_to' => $this->user->id,
         ]);
         $response->assertStatus(422)
             ->assertJson([
@@ -122,11 +154,12 @@ class CreateTaskApiTest extends TestCase
 
     public function test_validation_fail_due_to_invalid_data(): void
     {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/task', [
+        $response = $this->asAuthenticatedApiUser($this->user)->postJson('/api/v1/task', [
             'title' => 'Test Task',
             'description' => 'Test Description',
             'status_id' => 999, // invalid status_id
+            'project_id' => $this->project->id,
+            'assigned_to' => $this->user->id,
         ]);
         $response->assertStatus(422)
             ->assertJson([

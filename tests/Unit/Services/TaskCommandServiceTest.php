@@ -4,6 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\DTOs\Task\CreateTaskDTO;
 use App\Exceptions\ApiException;
+use App\Interfaces\Auth\PermissionServiceInterface;
 use App\Models\Task\Task;
 use App\Repositories\Task\TaskRepositoryInterface;
 use App\Services\Task\TaskCommandService;
@@ -16,7 +17,7 @@ class TaskCommandServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $userId = 1;
+    protected $userId = 2;
 
     protected function setUp(): void
     {
@@ -28,13 +29,17 @@ class TaskCommandServiceTest extends TestCase
             'description' => 'Test Description',
             'user_id' => $this->userId,
             'status_id' => 1,
+            'project_id' => 5,
+            'assigned_to' => 2,
         ]);
+        $this->permission = $this->mock(PermissionServiceInterface::class);
         $this->repo = $this->mock(TaskRepositoryInterface::class);
         $this->service = app(TaskCommandService::class);
     }
 
     public function test_create_task_success()
     {
+        $this->permission->shouldReceive('canCreateTask')->once()->andReturn(true);
         $this->repo->shouldReceive('countByUserId')->once()->andReturn(0);
         $this->repo->shouldReceive('existsByTitleAndUserId')->once()->andReturn(false);
         $this->repo->shouldReceive('create')->once()->andReturnUsing(function () {
@@ -51,6 +56,7 @@ class TaskCommandServiceTest extends TestCase
 
     public function test_create_task_fail_due_to_duplicate_title()
     {
+        $this->permission->shouldReceive('canCreateTask')->once()->andReturn(true);
         $this->repo->shouldReceive('countByUserId')->once()->andReturn(0);
         $this->repo->shouldReceive('existsByTitleAndUserId')->once()->andReturn(true);
         $this->repo->shouldNotReceive('create');
@@ -61,6 +67,7 @@ class TaskCommandServiceTest extends TestCase
 
     public function test_create_task_fail_due_to_limit()
     {
+        $this->permission->shouldReceive('canCreateTask')->once()->andReturn(true);
         $this->repo->shouldReceive('countByUserId')->once()->andReturn(5);
         $this->repo->shouldNotReceive('existsByTitleAndUserId');
         $this->repo->shouldNotReceive('create');
@@ -70,6 +77,7 @@ class TaskCommandServiceTest extends TestCase
 
     public function test_repository_throw_exception()
     {
+        $this->permission->shouldReceive('canCreateTask')->once()->andReturn(true);
         $this->repo->shouldReceive('countByUserId')->once()->andReturn(0);
         $this->repo->shouldReceive('existsByTitleAndUserId')->once()->andReturn(false);
         $this->repo->shouldReceive('create')->once()->andThrow(new Exception('DB ERROR'));
