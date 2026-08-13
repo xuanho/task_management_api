@@ -8,6 +8,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: task_management
+          MYSQL_USER: laravel
+          MYSQL_PASSWORD: password
+        ports:
+          - 3306:3306
       redis:
         image: redis:8.6.2
         ports:
@@ -18,7 +27,7 @@ jobs:
       - name: setup php
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           extensions: json, pdo_mysql
       - name: Install composer dependencies
         run: composer install --no-progress --no-suggest --prefer-dist
